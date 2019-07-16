@@ -7,17 +7,31 @@ function solcjs(_version) {
   return new Promise(async (resolve, reject) => {
     let newCompile;
     let version;
+    let compilersource;
+    let solc;
+    const solcWorker = new Worker('./solcWorker.js');
+    solcWorker.onmessage = data => {
+      if (data.type == 'versions') {
+        version = data.version;
+      }
+      if (data.type == 'version2url') {
+        compilersource = data.compilersource;
+      }
+
+      if (data.type == 'loadModule') {
+        solc = data.solc;
+      }
+    };
 
     try {
-      version = await solcjsCore.getVersion(_version);
-      
+      // version = await solcjsCore.getVersion(_version);
+      solcWorker.postMessage({ type: 'getVersions', _version });
       console.time('[fetch compiler]');
-      let url = await solcVersion.version2url(version);
-      let compilersource = await solcjsCore.getCompilersource(url);
+      solcWorker.postMessage({ type: 'version2url', version });
       console.timeEnd('[fetch compiler]');
 
       console.time('[load compiler]');
-      const solc = solcjsCore.loadModule(compilersource);
+      solcWorker.postMessage({ type: 'loadModule', compilersource });
       console.timeEnd('[load compiler]');
 
       console.time('[wrap compiler]');
@@ -31,7 +45,9 @@ function solcjs(_version) {
       try {
         await solcjsCore.pretest(newCompile, version);
         resolve(newCompile);
-      } catch (err) { throw new Error('pretest failed'); }
+      } catch (err) {
+        throw new Error('pretest failed');
+      }
     } catch (error) {
       console.error(error);
       reject(error);
