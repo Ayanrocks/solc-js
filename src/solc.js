@@ -1,7 +1,4 @@
-const solcVersion = require('solc-version');
-const getCompile = require('./getCompile');
 const solcjsCore = require('solcjs-core');
-const solcWrapper = solcjsCore.solcWrapper.wrapper;
 
 function solcjs(_version) {
   return new Promise(async (resolve, reject) => {
@@ -9,22 +6,27 @@ function solcjs(_version) {
     let version;
     let compilersource;
     let solc;
-    const solcWorker = new Worker('./solcWorker.js');
-    solcWorker.onmessage = data => {
-      if (data.type == 'versions') {
-        version = data.version;
-      }
-      if (data.type == 'version2url') {
-        compilersource = data.compilersource;
-      }
-
-      if (data.type == 'loadModule') {
-        solc = data.solc;
-      }
-    };
+    let url;
 
     try {
-      // version = await solcjsCore.getVersion(_version);
+      const solcWorker = new Worker('solcWorker.js');
+      solcWorker.onmessage = data => {
+        if (data.type == 'versions') {
+          version = data.version;
+        }
+        if (data.type == 'version2url') {
+          compilersource = data.compilersource;
+          url = data.url;
+        }
+
+        if (data.type == 'loadModule') {
+          solc = data.solc;
+        }
+        if (data.type == 'wrapCompiler') {
+          newCompile = data.newCompile;
+        }
+      };
+
       solcWorker.postMessage({ type: 'getVersions', _version });
       console.time('[fetch compiler]');
       solcWorker.postMessage({ type: 'version2url', version });
@@ -35,13 +37,8 @@ function solcjs(_version) {
       console.timeEnd('[load compiler]');
 
       console.time('[wrap compiler]');
-      let _compiler = solcWrapper(solc);
-      _compiler.opts = { version, url };
-
-      newCompile = getCompile(_compiler);
-      newCompile.version = { name: version, url };
+      solcWorker.postMessage({ type: 'wrapCompiler', version, url, solc });
       console.timeEnd('[wrap compiler]');
-
       try {
         await solcjsCore.pretest(newCompile, version);
         resolve(newCompile);
