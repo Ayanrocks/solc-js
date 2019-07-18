@@ -1,10 +1,14 @@
 // const solc = require('../src/');
 
 require('jsdom-worker');
+const path = require('path');
+// const { URL } = require('url');
+
 describe('solc EventEmitter', () => {
   it('returns compile result', () => {
-    // const browser = puppeteer.launch({ headless: false });
-    const solcWorker = new Worker();
+    const solcWorker = new Worker(
+      URL.(path.join(__dirname + '/../src/solcWorker.js'))
+    );
 
     solcWorker.onmessage = data => {
       console.log('Test working', data);
