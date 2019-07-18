@@ -1,9 +1,2 @@
-
-let solcjs = require('./solc');
-const solcVersion = require('solc-version');
-
-module.exports = solcjs;
-
-solcjs.versions = solcVersion.versions;
-solcjs.versionsSkipVersion5 = solcVersion.versionsSkipVersion5;
-solcjs.version2url = solcVersion.version2url;
+var r=require("./solc"),s=require("solc-version");module.exports=r,r.versions=s.versions,r.versionsSkipVersion5=s.versionsSkipVersion5,r.version2url=s.version2url;
+//# sourceMappingURL=index.js.map

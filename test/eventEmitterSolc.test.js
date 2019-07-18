@@ -1,19 +1,12 @@
-// const solc = require('../src/');
+require('jsdom-worker')
+const fs = require('fs')
+const path = require('path')
+const code = fs.readFileSync(path.join(__dirname + '/../src/index.js'))
 
-require('jsdom-worker');
-const path = require('path');
-// const { URL } = require('url');
-
-describe('solc EventEmitter', () => {
-  it('returns compile result', () => {
-    const solcWorker = new Worker(
-      URL.(path.join(__dirname + '/../src/solcWorker.js'))
-    );
-
-    solcWorker.onmessage = data => {
-      console.log('Test working', data);
-    };
-
-    // expect(solc()).toBe(true);
-  });
+test('solc EventEmitter', () => {
+  var link = document.createElement('link');
+  link.rel = 'script';
+  link.href = window.URL.createObjectURL(new Blob([code]));
+  document.body.appendChild(link);
+  expect(document.body.childNodes.length).toBeGreaterThan(0);
 });
