@@ -45062,182 +45062,6 @@ module.exports = function required(port, protocol) {
   return port !== 0;
 };
 
-},{}],"/home/ayanrocks/code/solc-js/node_modules/resolve-github/src/index.js":[function(require,module,exports){
-module.exports = {
-  type: 'github',
-  parser: require('./parser'),
-  resolver: require('./resolver'),
-  match: /^(https?:\/\/)?(www.)?github.com\/([^/]*\/[^/]*)\/(.*)/
-};
-},{"./parser":"/home/ayanrocks/code/solc-js/node_modules/resolve-github/src/parser.js","./resolver":"/home/ayanrocks/code/solc-js/node_modules/resolve-github/src/resolver.js"}],"/home/ayanrocks/code/solc-js/node_modules/resolve-github/src/parser.js":[function(require,module,exports){
-const replaceContent = require('solc-import').replaceContent
-const resolver = require('./resolver')
-// https://github.com/<owner>/<repo>/<path_to_the_file>
-
-module.exports = async function(importPath) {
-  const [, , , root, path] = require('./index').match.exec(importPath)
-
-  let url = `https://raw.githubusercontent.com/${root}/master/${path}`
-  try {
-    let data = await getData(url)
-    if (isSymbolicLink(data)) {
-      const tmps = url.split('/')
-      const filename = tmps[tmps.length - 1]
-      url = url.replace(filename, data)
-      data = await getData(url)
-    } else {
-      data = replaceContent(data, importPath, resolver)
-    }
-    return data
-  } catch (error) {
-    throw error
-  }
-}
-
-async function getData(url) {
-  let response = await fetch(url, { method: 'GET' })
-  let data = await response.text()
-  if (!response.ok || response.status !== 200) throw Error('Content ' + data)
-  return data
-}
-
-function isSymbolicLink(data) {
-  if (data.length < 50 && data.indexOf('.sol')) return true
-  return false
-}
-
-// async function getSource(importPath, root, path) {
-//   const url = `https://api.github.com/repos/${root}/contents/${path}`;
-//   // console.log('url:', url);
-//   try {
-//     const response = await fetch(url, { method: 'GET' });
-//     let data = await response.text();
-//     if (!response.ok || response.status !== 200) throw Error(data);
-//     data = JSON.parse(data);
-//     data.content = window.atob(data.content);
-//     data.content = replaceContent(data.content, importPath, pathResolve);
-//     if ('content' in data) return data.content;
-//     if ('message' in data) throw Error(data.message);
-//     throw Error('Content not received');
-//   } catch (error) {
-//     // Unknown transport error
-//     throw error;
-//   }
-// }
-
-},{"./index":"/home/ayanrocks/code/solc-js/node_modules/resolve-github/src/index.js","./resolver":"/home/ayanrocks/code/solc-js/node_modules/resolve-github/src/resolver.js","solc-import":"/home/ayanrocks/code/solc-js/node_modules/solc-import/src/index.js"}],"/home/ayanrocks/code/solc-js/node_modules/resolve-github/src/resolver.js":[function(require,module,exports){
-module.exports = function (content, from, subImportPath) {
-  let newContent = content;
-  let url = new window.URL(subImportPath, from);
-  let fixedPath = url.href;
-  newContent = newContent.replace(`import '${subImportPath}'`, `import '${fixedPath}'`);
-  newContent = newContent.replace(`import "${subImportPath}"`, `import "${fixedPath}"`);
-  return newContent;
-};
-},{}],"/home/ayanrocks/code/solc-js/node_modules/resolve-http/src/index.js":[function(require,module,exports){
-module.exports = {
-  type: 'http',
-  parser: require('./parser'),
-  resolver: require('./resolver'),
-  match: /^(http|https?:\/\/?(.*))$/
-};
-
-// const match = /^(http?:\/\/?(.*))$/;
-},{"./parser":"/home/ayanrocks/code/solc-js/node_modules/resolve-http/src/parser.js","./resolver":"/home/ayanrocks/code/solc-js/node_modules/resolve-http/src/resolver.js"}],"/home/ayanrocks/code/solc-js/node_modules/resolve-http/src/parser.js":[function(require,module,exports){
-const replaceContent = require('solc-import').replaceContent;
-const resolver = require('./resolver');
-
-module.exports = async function (importPath) {
-  const [, url,] = require('./index').match.exec(importPath);
-  try {
-    const response = await fetch(url, { method: 'GET' });
-    let data = await response.text();
-    if (!response.ok || response.status !== 200) throw Error('Content ' + data);
-    data = replaceContent(data, importPath, resolver);
-    return data;
-  } catch (error) {
-    throw error;
-  }
-};
-},{"./index":"/home/ayanrocks/code/solc-js/node_modules/resolve-http/src/index.js","./resolver":"/home/ayanrocks/code/solc-js/node_modules/resolve-http/src/resolver.js","solc-import":"/home/ayanrocks/code/solc-js/node_modules/solc-import/src/index.js"}],"/home/ayanrocks/code/solc-js/node_modules/resolve-http/src/resolver.js":[function(require,module,exports){
-arguments[4]["/home/ayanrocks/code/solc-js/node_modules/resolve-github/src/resolver.js"][0].apply(exports,arguments)
-},{}],"/home/ayanrocks/code/solc-js/node_modules/resolve-ipfs/src/index.js":[function(require,module,exports){
-module.exports = {
-  type: 'ipfs',
-  parser: require('./parser'),
-  resolver: require('./resolver'),
-  match: /^(ipfs:\/\/?.+)/
-};
-},{"./parser":"/home/ayanrocks/code/solc-js/node_modules/resolve-ipfs/src/parser.js","./resolver":"/home/ayanrocks/code/solc-js/node_modules/resolve-ipfs/src/resolver.js"}],"/home/ayanrocks/code/solc-js/node_modules/resolve-ipfs/src/parser.js":[function(require,module,exports){
-module.exports = async function (importPath) {
-  let [, url] = require('./index').match.exec(importPath);
-  // replace ipfs:// with /ipfs/
-  url = url.replace(/^ipfs:\/\/?/, 'ipfs/');
-  url = 'https://gateway.ipfs.io/' + url;
-
-  try {
-    const response = await fetch(url, { method: 'GET' });
-    const data = await response.text();
-    if (!response.ok || response.status !== 200) throw Error(data);
-    return data;
-  } catch (error) {
-    throw error;
-  }
-};
-},{"./index":"/home/ayanrocks/code/solc-js/node_modules/resolve-ipfs/src/index.js"}],"/home/ayanrocks/code/solc-js/node_modules/resolve-ipfs/src/resolver.js":[function(require,module,exports){
-arguments[4]["/home/ayanrocks/code/solc-js/node_modules/resolve-github/src/resolver.js"][0].apply(exports,arguments)
-},{}],"/home/ayanrocks/code/solc-js/node_modules/resolve-swarm/src/index.js":[function(require,module,exports){
-module.exports = {
-  type: 'swarm',
-  parser: require('./parser'),
-  resolver: require('./resolver'),
-  match: /^(bzz[ri]?:\/\/?(.*))$/
-};
-},{"./parser":"/home/ayanrocks/code/solc-js/node_modules/resolve-swarm/src/parser.js","./resolver":"/home/ayanrocks/code/solc-js/node_modules/resolve-swarm/src/resolver.js"}],"/home/ayanrocks/code/solc-js/node_modules/resolve-swarm/src/parser.js":[function(require,module,exports){
-module.exports = async function (importPath) {
-  const [, url,] = require('./index').match.exec(importPath);
-  try {
-    let content = await swarmgw.get(url);
-    return content;
-  } catch (error) {
-    throw error;
-  }
-};
-
-const swarmgw = swarmgwMaker();
-
-
-async function getFile(gateway, url) {
-  const httpsURL = gateway + '/' + url;
-  try {
-    const response = await fetch(httpsURL, { method: 'GET' });
-    const data = await response.text();
-    if (!response.ok || response.status !== 200) throw Error(data);
-    return data;
-  } catch (error) {
-    throw error;
-  }
-}
-
-function swarmgwMaker(opts) {
-  opts = opts || {};
-  var gateway;
-  if (opts.gateway) {
-    gateway = opts.gateway;
-  } else if (opts.mode === 'http') {
-    gateway = 'http://swarm-gateways.net';
-  } else {
-    gateway = 'https://swarm-gateways.net';
-  }
-  return {
-    get: async function (url) {
-      return await getFile(gateway, url);
-    }
-  };
-}
-
-},{"./index":"/home/ayanrocks/code/solc-js/node_modules/resolve-swarm/src/index.js"}],"/home/ayanrocks/code/solc-js/node_modules/resolve-swarm/src/resolver.js":[function(require,module,exports){
-arguments[4]["/home/ayanrocks/code/solc-js/node_modules/resolve-github/src/resolver.js"][0].apply(exports,arguments)
 },{}],"/home/ayanrocks/code/solc-js/node_modules/ripemd160/index.js":[function(require,module,exports){
 'use strict'
 var Buffer = require('buffer').Buffer
@@ -53031,204 +52855,7 @@ function displayContractUI(opts) {
   }
 }
 
-},{"bel":"/home/ayanrocks/code/solc-js/node_modules/bel/browser.js","bignumber.js":"/home/ayanrocks/code/solc-js/node_modules/bignumber.js/bignumber.js","copy-text-to-clipboard":"/home/ayanrocks/code/solc-js/node_modules/copy-text-to-clipboard/index.js","csjs-inject":"/home/ayanrocks/code/solc-js/node_modules/csjs-inject/index.js","ethers":"/home/ayanrocks/code/solc-js/node_modules/ethers/dist/ethers.min.js","getDate":"/home/ayanrocks/code/solc-js/node_modules/smartcontract-app/src/node_modules/getDate.js","glossary":"/home/ayanrocks/code/solc-js/node_modules/smartcontract-app/src/node_modules/glossary.js","input-address":"/home/ayanrocks/code/solc-js/node_modules/input-address/src/input-address.js","input-array":"/home/ayanrocks/code/solc-js/node_modules/input-array/src/input-array.js","input-boolean":"/home/ayanrocks/code/solc-js/node_modules/input-boolean/src/input-boolean.js","input-integer":"/home/ayanrocks/code/solc-js/node_modules/input-integer/src/input-integer.js","input-string":"/home/ayanrocks/code/solc-js/node_modules/input-string/src/input-string.js","shortenHexData":"/home/ayanrocks/code/solc-js/node_modules/smartcontract-app/src/node_modules/shortenHexData.js","solidity-validator":"/home/ayanrocks/code/solc-js/node_modules/solidity-validator/src/index.js","web3":"/home/ayanrocks/code/solc-js/node_modules/web3/dist/web3.umd.js"}],"/home/ayanrocks/code/solc-js/node_modules/solc-import/src/combineSource.js":[function(require,module,exports){
-const getImports = require('./getImports');
-const isExistImport = require('./isExistImport');
-
-module.exports = combineSource;
-
-async function combineSource(source, getImportContent) {
-  try {
-    const allImportPath = getImports(source);
-    let allSubImportPath = [];
-    let sourceMap = new Map();
-
-    for (let importPath of allImportPath) {
-      let content = await getImportContent(importPath);
-      allSubImportPath = allSubImportPath.concat(getImports(content));
-      sourceMap.set(importPath, content);
-    }
-
-    sourceMap = await getMergeSubImportMap(allSubImportPath, sourceMap, getImportContent);
-
-    let sources = [];
-    for (let [key, value] of sourceMap) {
-      sources.push({ path: key, content: value });
-    }
-    return sources;
-  } catch (error) {
-    throw(error);
-  }
-}
-
-async function getMergeSubImportMap(allSubImportPath, sourceMap, getImportContent) {
-  if (allSubImportPath.length != 0) {
-    let search = true;
-    let nextAllSubImportPath = [];
-    while (search) {
-      for (let subImportPath of allSubImportPath) {
-        if (sourceMap.has(subImportPath)) break;
-        let content = await getImportContent(subImportPath);
-        sourceMap.set(subImportPath, content);
-        if (isExistImport(content)) {
-          let sub2ImportPath = getImports(content);
-          nextAllSubImportPath = nextAllSubImportPath.concat(sub2ImportPath);
-        }
-      }
-      search = nextAllSubImportPath.length != 0;
-      allSubImportPath = nextAllSubImportPath;
-      nextAllSubImportPath = [];
-    }
-  }
-  return sourceMap;
-}
-},{"./getImports":"/home/ayanrocks/code/solc-js/node_modules/solc-import/src/getImports.js","./isExistImport":"/home/ayanrocks/code/solc-js/node_modules/solc-import/src/isExistImport.js"}],"/home/ayanrocks/code/solc-js/node_modules/solc-import/src/getImports.js":[function(require,module,exports){
-module.exports = getImports;
-
-function getImports(source) {
-  let matches = [];
-  let ir = /^(.*import){1}(.+){0,1}\s['"](.+)['"];/gm;
-  let match = null;
-  while ((match = ir.exec(source))) {
-    matches.push(match[3]);
-  }
-  return matches;
-}
-},{}],"/home/ayanrocks/code/solc-js/node_modules/solc-import/src/getReadCallback.js":[function(require,module,exports){
-const combineSource = require('./combineSource');
-
-module.exports = getReadCallback;
-
-async function getReadCallback(sourceCode, getImportContent) {
-  let sources = await combineSource(sourceCode, getImportContent);
-
-  // import: it must be sync function
-  function readCallback(path) {
-    for (let source of sources) {
-      if (source.path == path) {
-        return { contents: source.content }; 
-      } 
-    }
-  }
-  return readCallback;
-}
-},{"./combineSource":"/home/ayanrocks/code/solc-js/node_modules/solc-import/src/combineSource.js"}],"/home/ayanrocks/code/solc-js/node_modules/solc-import/src/index.js":[function(require,module,exports){
-module.exports = {
-  combineSource: require('./combineSource'),
-  getImports: require('./getImports'),
-  getReadCallback: require('./getReadCallback'),
-  isExistImport: require('./isExistImport'),
-  replaceContent: require('./replaceContent')
-};
-},{"./combineSource":"/home/ayanrocks/code/solc-js/node_modules/solc-import/src/combineSource.js","./getImports":"/home/ayanrocks/code/solc-js/node_modules/solc-import/src/getImports.js","./getReadCallback":"/home/ayanrocks/code/solc-js/node_modules/solc-import/src/getReadCallback.js","./isExistImport":"/home/ayanrocks/code/solc-js/node_modules/solc-import/src/isExistImport.js","./replaceContent":"/home/ayanrocks/code/solc-js/node_modules/solc-import/src/replaceContent.js"}],"/home/ayanrocks/code/solc-js/node_modules/solc-import/src/isExistImport.js":[function(require,module,exports){
-const getImports = require('./getImports');
-
-module.exports = isExistImport;
-
-function isExistImport(sourcecode) {
-  const allImportPath = getImports(sourcecode);
-  return allImportPath.length != 0;
-}
-},{"./getImports":"/home/ayanrocks/code/solc-js/node_modules/solc-import/src/getImports.js"}],"/home/ayanrocks/code/solc-js/node_modules/solc-import/src/replaceContent.js":[function(require,module,exports){
-const getImports = require('./getImports');
-const isExistImport = require('./isExistImport');
-
-module.exports = replaceContent;
-
-function replaceContent(content, from, resolver) {
-  let newContent = content;
-  if (isExistImport(content)) {
-    const allSubImportPath = getImports(content);
-    for (let subImportPath of allSubImportPath) {
-      if (isExplicitlyRelative(subImportPath)) {
-        newContent = resolver(newContent, from, subImportPath);
-      }
-    }
-  }
-  return newContent;
-}
-
-function isExplicitlyRelative(importPath) {
-  return importPath.indexOf('.') === 0;
-}
-},{"./getImports":"/home/ayanrocks/code/solc-js/node_modules/solc-import/src/getImports.js","./isExistImport":"/home/ayanrocks/code/solc-js/node_modules/solc-import/src/isExistImport.js"}],"/home/ayanrocks/code/solc-js/node_modules/solc-resolver/src/index.js":[function(require,module,exports){
-module.exports = {
-  resolverEngine: require('./resolverEngine')
-};
-},{"./resolverEngine":"/home/ayanrocks/code/solc-js/node_modules/solc-resolver/src/resolverEngine.js"}],"/home/ayanrocks/code/solc-js/node_modules/solc-resolver/src/resolverEngine.js":[function(require,module,exports){
-module.exports = class ResolverEngine {
-  constructor() {
-    this.resolvers = [];
-    this.previouslyHandled = {};
-  }
-
-  async getContent(url) {
-    for (let resolve of this.resolvers) {
-      if (this.getResolverType(url) == resolve.type) {
-        const result = await resolve.parser(url);
-        if (result) return result;
-      }
-    }
-    return;
-  }
-
-  // get data
-  async require(importPath) {
-    const imported = this.previouslyHandled[importPath];
-    // get source from cache
-    if (imported) {
-      let result = this.getResultFromImported(imported, importPath);
-      return result.content;
-    }
-
-    const handlerType = this.getResolverType(importPath);
-    const content = await this.getContent(importPath);
-
-    this.previouslyHandled[importPath] = {
-      content: content,
-      type: handlerType,
-      importPath
-    };
-
-    return content;
-  }
-
-  // chain pattern
-  addResolver(resolver) {
-    this.resolvers.push(resolver);
-    return this;
-  }
-
-  getResultFromImported(imported, importPath) {
-    return {
-      content: imported.content,
-      type: imported.type,
-      importPath
-    };
-  }
-
-  getResolverType(url) {
-    for (let resolver of this.resolvers) {
-      let match = resolver.match.exec(url);
-      if (match) {
-        return resolver.type;
-      }
-    }
-    return;
-  }
-
-  isMatch(importPath) {
-    let found = false;
-    if (this.resolvers.length == 0) return false;
-    for (let resolver of this.resolvers) {
-      if (found) break;
-      const match = resolver.match.exec(importPath);
-      if (match) found = true;
-    }
-    return !found;
-  }
-};
-},{}],"/home/ayanrocks/code/solc-js/node_modules/solc-version/src/getlist.js":[function(require,module,exports){
+},{"bel":"/home/ayanrocks/code/solc-js/node_modules/bel/browser.js","bignumber.js":"/home/ayanrocks/code/solc-js/node_modules/bignumber.js/bignumber.js","copy-text-to-clipboard":"/home/ayanrocks/code/solc-js/node_modules/copy-text-to-clipboard/index.js","csjs-inject":"/home/ayanrocks/code/solc-js/node_modules/csjs-inject/index.js","ethers":"/home/ayanrocks/code/solc-js/node_modules/ethers/dist/ethers.min.js","getDate":"/home/ayanrocks/code/solc-js/node_modules/smartcontract-app/src/node_modules/getDate.js","glossary":"/home/ayanrocks/code/solc-js/node_modules/smartcontract-app/src/node_modules/glossary.js","input-address":"/home/ayanrocks/code/solc-js/node_modules/input-address/src/input-address.js","input-array":"/home/ayanrocks/code/solc-js/node_modules/input-array/src/input-array.js","input-boolean":"/home/ayanrocks/code/solc-js/node_modules/input-boolean/src/input-boolean.js","input-integer":"/home/ayanrocks/code/solc-js/node_modules/input-integer/src/input-integer.js","input-string":"/home/ayanrocks/code/solc-js/node_modules/input-string/src/input-string.js","shortenHexData":"/home/ayanrocks/code/solc-js/node_modules/smartcontract-app/src/node_modules/shortenHexData.js","solidity-validator":"/home/ayanrocks/code/solc-js/node_modules/solidity-validator/src/index.js","web3":"/home/ayanrocks/code/solc-js/node_modules/web3/dist/web3.umd.js"}],"/home/ayanrocks/code/solc-js/node_modules/solc-version/src/getlist.js":[function(require,module,exports){
 const baseURL = 'https://solc-bin.ethereum.org/bin';
 
 const ajaxCaching = require('ajax-caching');
@@ -53388,11 +53015,86 @@ function versionsSkipVersion5() {
   });
 }
 },{"./getlist":"/home/ayanrocks/code/solc-js/node_modules/solc-version/src/getlist.js","./groupByVersion":"/home/ayanrocks/code/solc-js/node_modules/solc-version/src/groupByVersion.js","./processList":"/home/ayanrocks/code/solc-js/node_modules/solc-version/src/processList.js"}],"/home/ayanrocks/code/solc-js/node_modules/solcjs-core/node_modules/solc-import/src/combineSource.js":[function(require,module,exports){
-arguments[4]["/home/ayanrocks/code/solc-js/node_modules/solc-import/src/combineSource.js"][0].apply(exports,arguments)
+const getImports = require('./getImports');
+const isExistImport = require('./isExistImport');
+
+module.exports = combineSource;
+
+async function combineSource(source, getImportContent) {
+  try {
+    const allImportPath = getImports(source);
+    let allSubImportPath = [];
+    let sourceMap = new Map();
+
+    for (let importPath of allImportPath) {
+      let content = await getImportContent(importPath);
+      allSubImportPath = allSubImportPath.concat(getImports(content));
+      sourceMap.set(importPath, content);
+    }
+
+    sourceMap = await getMergeSubImportMap(allSubImportPath, sourceMap, getImportContent);
+
+    let sources = [];
+    for (let [key, value] of sourceMap) {
+      sources.push({ path: key, content: value });
+    }
+    return sources;
+  } catch (error) {
+    throw(error);
+  }
+}
+
+async function getMergeSubImportMap(allSubImportPath, sourceMap, getImportContent) {
+  if (allSubImportPath.length != 0) {
+    let search = true;
+    let nextAllSubImportPath = [];
+    while (search) {
+      for (let subImportPath of allSubImportPath) {
+        if (sourceMap.has(subImportPath)) break;
+        let content = await getImportContent(subImportPath);
+        sourceMap.set(subImportPath, content);
+        if (isExistImport(content)) {
+          let sub2ImportPath = getImports(content);
+          nextAllSubImportPath = nextAllSubImportPath.concat(sub2ImportPath);
+        }
+      }
+      search = nextAllSubImportPath.length != 0;
+      allSubImportPath = nextAllSubImportPath;
+      nextAllSubImportPath = [];
+    }
+  }
+  return sourceMap;
+}
 },{"./getImports":"/home/ayanrocks/code/solc-js/node_modules/solcjs-core/node_modules/solc-import/src/getImports.js","./isExistImport":"/home/ayanrocks/code/solc-js/node_modules/solcjs-core/node_modules/solc-import/src/isExistImport.js"}],"/home/ayanrocks/code/solc-js/node_modules/solcjs-core/node_modules/solc-import/src/getImports.js":[function(require,module,exports){
-arguments[4]["/home/ayanrocks/code/solc-js/node_modules/solc-import/src/getImports.js"][0].apply(exports,arguments)
+module.exports = getImports;
+
+function getImports(source) {
+  let matches = [];
+  let ir = /^(.*import){1}(.+){0,1}\s['"](.+)['"];/gm;
+  let match = null;
+  while ((match = ir.exec(source))) {
+    matches.push(match[3]);
+  }
+  return matches;
+}
 },{}],"/home/ayanrocks/code/solc-js/node_modules/solcjs-core/node_modules/solc-import/src/getReadCallback.js":[function(require,module,exports){
-arguments[4]["/home/ayanrocks/code/solc-js/node_modules/solc-import/src/getReadCallback.js"][0].apply(exports,arguments)
+const combineSource = require('./combineSource');
+
+module.exports = getReadCallback;
+
+async function getReadCallback(sourceCode, getImportContent) {
+  let sources = await combineSource(sourceCode, getImportContent);
+
+  // import: it must be sync function
+  function readCallback(path) {
+    for (let source of sources) {
+      if (source.path == path) {
+        return { contents: source.content }; 
+      } 
+    }
+  }
+  return readCallback;
+}
 },{"./combineSource":"/home/ayanrocks/code/solc-js/node_modules/solcjs-core/node_modules/solc-import/src/combineSource.js"}],"/home/ayanrocks/code/solc-js/node_modules/solcjs-core/node_modules/solc-import/src/index.js":[function(require,module,exports){
 module.exports = {
   combineSource: require('./combineSource'),
@@ -53401,7 +53103,14 @@ module.exports = {
   isExistImport: require('./isExistImport')
 };
 },{"./combineSource":"/home/ayanrocks/code/solc-js/node_modules/solcjs-core/node_modules/solc-import/src/combineSource.js","./getImports":"/home/ayanrocks/code/solc-js/node_modules/solcjs-core/node_modules/solc-import/src/getImports.js","./getReadCallback":"/home/ayanrocks/code/solc-js/node_modules/solcjs-core/node_modules/solc-import/src/getReadCallback.js","./isExistImport":"/home/ayanrocks/code/solc-js/node_modules/solcjs-core/node_modules/solc-import/src/isExistImport.js"}],"/home/ayanrocks/code/solc-js/node_modules/solcjs-core/node_modules/solc-import/src/isExistImport.js":[function(require,module,exports){
-arguments[4]["/home/ayanrocks/code/solc-js/node_modules/solc-import/src/isExistImport.js"][0].apply(exports,arguments)
+const getImports = require('./getImports');
+
+module.exports = isExistImport;
+
+function isExistImport(sourcecode) {
+  const allImportPath = getImports(sourcecode);
+  return allImportPath.length != 0;
+}
 },{"./getImports":"/home/ayanrocks/code/solc-js/node_modules/solcjs-core/node_modules/solc-import/src/getImports.js"}],"/home/ayanrocks/code/solc-js/node_modules/solcjs-core/src/getCompile.js":[function(require,module,exports){
 const solcImport = require('solc-import');
 const getReadCallback = require('./getReadCallback');
@@ -69063,61 +68772,7 @@ function extend() {
     return target
 }
 
-},{}],"/home/ayanrocks/code/solc-js/src/getCompile.js":[function(require,module,exports){
-const solcImport = require('solc-import');
-const solcResolver = require('solc-resolver');
-const solcjsCore = require('solcjs-core');
-
-module.exports = getCompile;
-
-function getCompile(oldSolc) {
-  let compile;
-  Object.keys(oldSolc).forEach(key => {
-    if (key != 'compile') return;
-
-    compile = async function (sourcecode = '', getImportContent) {
-      if (solcImport.isExistImport(sourcecode)) {
-        if (getImportContent == undefined) {
-          getImportContent = getContent();
-        } else if (typeof getImportContent !== 'function') {
-          throw Error('getContent should be a funcion.');
-        }
-      }
-
-      let readCallback = await solcjsCore.getReadCallback(
-        sourcecode,
-        getImportContent
-      );
-      return solcjsCore.wrapperCompile(oldSolc, sourcecode, readCallback);
-    };
-  });
-  return compile;
-}
-
-function getContent() {
-  const ResolverEngine = require('solc-resolver').resolverEngine;
-  let resolverEngine = new ResolverEngine();
-
-  let resolveGithub = require('resolve-github');
-  resolverEngine.addResolver(resolveGithub);
-
-  let resolveHttp = require('resolve-http');
-  resolverEngine.addResolver(resolveHttp);
-
-  let resolveIPFS = require('resolve-ipfs');
-  resolverEngine.addResolver(resolveIPFS);
-
-  let resolveSwarm = require('resolve-swarm');
-  resolverEngine.addResolver(resolveSwarm);
-
-  const getImportContent = async function (path) {
-    return await resolverEngine.require(path);
-  };
-
-  return getImportContent;
-}
-
-},{"resolve-github":"/home/ayanrocks/code/solc-js/node_modules/resolve-github/src/index.js","resolve-http":"/home/ayanrocks/code/solc-js/node_modules/resolve-http/src/index.js","resolve-ipfs":"/home/ayanrocks/code/solc-js/node_modules/resolve-ipfs/src/index.js","resolve-swarm":"/home/ayanrocks/code/solc-js/node_modules/resolve-swarm/src/index.js","solc-import":"/home/ayanrocks/code/solc-js/node_modules/solc-import/src/index.js","solc-resolver":"/home/ayanrocks/code/solc-js/node_modules/solc-resolver/src/index.js","solcjs-core":"/home/ayanrocks/code/solc-js/node_modules/solcjs-core/src/index.js"}],"/home/ayanrocks/code/solc-js/src/index.js":[function(require,module,exports){
+},{}],"/home/ayanrocks/code/solc-js/src/index.js":[function(require,module,exports){
 
 let solcjs = require('./solc');
 const solcVersion = require('solc-version');
@@ -69128,37 +68783,38 @@ solcjs.versions = solcVersion.versions;
 solcjs.versionsSkipVersion5 = solcVersion.versionsSkipVersion5;
 solcjs.version2url = solcVersion.version2url;
 },{"./solc":"/home/ayanrocks/code/solc-js/src/solc.js","solc-version":"/home/ayanrocks/code/solc-js/node_modules/solc-version/src/index.js"}],"/home/ayanrocks/code/solc-js/src/solc.js":[function(require,module,exports){
-const solcVersion = require('solc-version');
-const getCompile = require('./getCompile');
 const solcjsCore = require('solcjs-core');
-const solcWrapper = solcjsCore.solcWrapper.wrapper;
+const EventEmitter = require('events');
 
-function solcjs(_version) {
-  return new Promise(async (resolve, reject) => {
-    let newCompile;
-    let version;
-    let compilersource;
-    let solc;
-    let url;
-    const solcWorker = new Worker('./solcWorker.js');
-    solcWorker.onmessage = data => {
-      if (data.type == 'versions') {
-        version = data.version;
-      }
-      if (data.type == 'version2url') {
-        compilersource = data.compilersource;
-        url = data.url;
-      }
+async function solcjs(_version) {
+  let newCompile;
+  let version;
+  let compilersource;
+  let solc;
+  let url;
+  const newEvent = new EventEmitter();
 
-      if (data.type == 'loadModule') {
-        solc = data.solc;
-      }
-      if (data.type == 'wrapCompiler') {
-        newCompile = data.newCompile;
-      }
-    };
+  try {
+    if (window.Worker) {
+      const solcWorker = new window.Worker('solcWorker.js');
+      solcWorker.onmessage = data => {
+        if (data.type == 'versions') {
+          version = data.version;
+          newEvent.emit('version', version);
+        }
+        if (data.type == 'version2url') {
+          compilersource = data.compilersource;
+          url = data.url;
+        }
 
-    try {
+        if (data.type == 'loadModule') {
+          solc = data.solc;
+        }
+        if (data.type == 'wrapCompiler') {
+          newCompile = data.newCompile;
+        }
+      };
+
       solcWorker.postMessage({ type: 'getVersions', _version });
       console.time('[fetch compiler]');
       solcWorker.postMessage({ type: 'version2url', version });
@@ -69171,20 +68827,21 @@ function solcjs(_version) {
       console.time('[wrap compiler]');
       solcWorker.postMessage({ type: 'wrapCompiler', version, url, solc });
       console.timeEnd('[wrap compiler]');
-
-      try {
-        await solcjsCore.pretest(newCompile, version);
-        resolve(newCompile);
-      } catch (err) {
-        throw new Error('pretest failed');
-      }
-    } catch (error) {
-      console.error(error);
-      reject(error);
     }
-  });
+    try {
+      await solcjsCore.pretest(newCompile, version);
+      newEvent.emit('compile', newCompile);
+    } catch (err) {
+      // throw new Error('pretest failed');
+      newEvent.emit('error', err);
+    }
+  } catch (error) {
+    console.error(error);
+    // reject(error);
+    newEvent.emit('error', error);
+  }
 }
 
 module.exports = solcjs;
 
-},{"./getCompile":"/home/ayanrocks/code/solc-js/src/getCompile.js","solc-version":"/home/ayanrocks/code/solc-js/node_modules/solc-version/src/index.js","solcjs-core":"/home/ayanrocks/code/solc-js/node_modules/solcjs-core/src/index.js"}]},{},["/home/ayanrocks/code/solc-js/demo/demo.js"]);
+},{"events":"/home/ayanrocks/code/solc-js/node_modules/browserify/node_modules/events/events.js","solcjs-core":"/home/ayanrocks/code/solc-js/node_modules/solcjs-core/src/index.js"}]},{},["/home/ayanrocks/code/solc-js/demo/demo.js"]);

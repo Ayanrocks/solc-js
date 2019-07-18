@@ -1,7 +1,15 @@
-const solc = require('../src/');
+// const solc = require('../src/');
 
-// describe('solc EventEmitter', () => {
-//   it('returns compile result', () => {
-//     expect(solc()).toBe(true);
-//   });
-// });
+require('jsdom-worker');
+describe('solc EventEmitter', () => {
+  it('returns compile result', () => {
+    // const browser = puppeteer.launch({ headless: false });
+    const solcWorker = new Worker();
+
+    solcWorker.onmessage = data => {
+      console.log('Test working', data);
+    };
+
+    // expect(solc()).toBe(true);
+  });
+});
