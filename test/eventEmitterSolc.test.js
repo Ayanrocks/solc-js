@@ -1,16 +1,21 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const solc = require('../src/');
 
 require('jsdom-worker');
 // const { URL } = require('url');
-
-
-
-
-
-
-
-
-
 
 describe('solc EventEmitter', () => {
   it('await solcjs() - get latest compiler', async () => {
