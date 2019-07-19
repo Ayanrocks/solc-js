@@ -2,10 +2,11 @@
   "name": "solc-js",
   "version": "1.0.0",
   "description": "cross-browser solidity compiler for the web",
-  "main": "src/index.js",
+  "source": "src/",
+  "main": "bundle.js",
   "scripts": {
     "start": "budo demo/demo.js:bundle.js --title $npm_package_name --force-default-index --open --live --ssl",
-    "build": "microbundle --external all",
+    "build": "microbundle --external build --f cjs",
     "lint": "eslint src",
     "test": "jest",
     "coverage": "nyc --reporter=html --reporter=text mocha --recursive -t 30s",
