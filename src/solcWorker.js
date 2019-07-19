@@ -1,5 +1,5 @@
 const solcVersion = require('solc-version');
-const getCompile = require('./getCompile');
+const getCompile = require('getCompile');
 const solcjsCore = require('solcjs-core');
 const solcWrapper = solcjsCore.solcWrapper.wrapper;
 
