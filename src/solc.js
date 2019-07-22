@@ -20,10 +20,12 @@ async function solcjs(_version) {
         if (data.type == 'version2url') {
           compilersource = data.compilersource;
           url = data.url;
+          newEvent.emit('version2url', { url, compilersource });
         }
 
         if (data.type == 'loadModule') {
           solc = data.solc;
+          newEvent.emit('loadModule', solc);
         }
         if (data.type == 'wrapCompiler') {
           newCompile = data.newCompile;
