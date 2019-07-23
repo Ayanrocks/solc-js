@@ -1,14 +1,14 @@
 const solcjsCore = require('solcjs-core');
 const EventEmitter = require('events');
 require('jsdom-worker');
-function Solcjs(_version) {
+function Solcjs(link) {
   this.newCompile;
   this.version;
   this.compilersource;
   this.solc;
   this.url;
   this.newEvent = new EventEmitter();
-  this.solcWorker = new Worker('solcWorker.js');
+  this.solcWorker = new Worker(link);
 }
 
 Solcjs.prototype.version = () => {
